@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>班級傳感器雲端數據中心</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f8; }
+    h1 { color: #333; }
+    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background-color: #007bff; color: white; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    .status { font-size: 0.9em; color: #666; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>📡 即時傳感器數據監控</h1>
+    <div class="status" id="status">正在載入數據...</div>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>時間 (Timestamp)</th>
+          <th>裝置名稱 (Device ID)</th>
+          <th>傳感器數值 (Value)</th>
+        </tr>
+      </thead>
+      <tbody id="data-table">
+        <!-- 數據會由 JavaScript 動態填入 -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // ⚠️ 請填入您從 Google Apps Script 取得的「網頁應用程式 URL」
+    const API_URL = "https://script.google.com/macros/s/AKfycbxiLwkU0C0aVrYLe38mTgKLzz-mIYk3eczjwXT9_SCV-pWi145DCEACBQFrPGNbcodlaQ/exec";
+
+    async function fetchData() {
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        const tableBody = document.getElementById("data-table");
+        tableBody.innerHTML = ""; // 清除舊數據
+        
+        // 將數據反轉顯示，最新數據排在最上方
+        data.reverse().forEach(item => {
+          const row = document.createElement("tr");
+          const formattedTime = new Date(item.timestamp).toLocaleString();
+          row.innerHTML = `
+            <td>${formattedTime}</td>
+            <td>${item.deviceId}</td>
+            <td><strong>${item.value}</strong></td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        document.getElementById("status").innerText = `最後更新時間：${new Date().toLocaleTimeString()} (每 10 秒自動刷新)`;
+      } catch (error) {
+        document.getElementById("status").innerText = "⚠️ 數據載入失敗，請檢查 API URL 是否正確。";
+        console.error("Error fetching data:", error);
+      }
+    }
+
+    // 首次載入數據
+    fetchData();
+
+    // 設定每 10 秒（10000 毫秒）自動定期向 API 讀取最新數據
+    setInterval(fetchData, 10000);
+  </script>
+</body>
+</html>
